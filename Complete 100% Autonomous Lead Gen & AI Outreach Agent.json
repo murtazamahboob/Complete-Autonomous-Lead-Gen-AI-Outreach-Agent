@@ -1,0 +1,906 @@
+{
+  "name": "Complete 100% Autonomous Lead Gen & AI Outreach Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "🎯 Niche Lead Generator",
+        "formDescription": "Enter your target niche and location to trigger automated scraping, AI enrichment, and outreach.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Target Niche / Industry",
+              "fieldType": "string",
+              "placeholder": "e.g., Software Founders, Real Estate Agencies, E-commerce Brands",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Location",
+              "fieldType": "string",
+              "placeholder": "e.g., United States, London, California",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Offer / Value Proposition",
+              "fieldType": "string",
+              "placeholder": "e.g., Free AI workflow audit to save 10 hours/week",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1baa2557-46e0-4305-9de1-1ca90351832a",
+      "name": "1. Niche Form Trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        832
+      ],
+      "webhookId": "d62719e3-2e5c-4268-afab-519b2339778f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "1c4d95b649afeb7f3a7bbbc29112be3940c72457"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"q\": \"site:linkedin.com/in/ \\\"CEO\\\" OR \\\"Founder\\\" \\\"{{ $json['Target Niche / Industry'] }}\\\" \\\"{{ $json['Location'] }}\\\"\"\n}",
+        "options": {}
+      },
+      "id": "4e83d33a-3ed5-47d5-8093-8bf82ae705f0",
+      "name": "2. Serper Niche Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1536,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "organic",
+        "options": {}
+      },
+      "id": "cac208fe-3dc9-42c6-8cc7-10ec6a652b40",
+      "name": "3. Extract Lead Items",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an elite B2B Data Enrichment, Lead Intelligence, and Copywriting Agent. Your sole purpose is to parse raw search snippets, clean executive metadata, accurately predict professional business emails, and write high-converting, human-like cold outreach proposals.\n\n### OPERATIONAL RULES:\n1. NAME EXTRACTION: Extract and clean the person's Full Name. Remove credentials (e.g., MBA, Ph.D., CPA, DDS, emojis).\n2. JOB TITLE EXTRACTION: Extract their actual professional job title from the text (e.g., Founder, Principal Dentist, CEO, Managing Director). Do NOT use generic system roles.\n3. COMPANY EXTRACTION: Identify the primary company name. Remove legal entity identifiers (Inc., LLC, Ltd., Corp, Co.).\n4. EMAIL PREDICTION/EXTRACTION:\n   - First, check if an explicit email address is written in the snippet text.\n   - If not found, deduce the company's root web domain (e.g., 'Acme Software' -> 'acmesoftware.com').\n   - Generate the most statistically probable B2B email format: {first_name}@{domain}. If domain is ambiguous, use {first_name}.{last_name}@{clean_company_name}.com.\n   - NEVER output generic domains (gmail.com, yahoo.com) unless explicitly written in the source text.\n5. SNIPPET CLEANING: Summarize their current role and company focus into exactly 1 clear sentence.\n6. HUMAN PROPOSAL GENERATION: Write a personalized 30-to-50 word cold outreach message pitching the user's core offer: \"{{ $('1. Niche Form Trigger').item.json['Offer / Value Proposition'] }}\".\n   - It MUST sound like a warm, intelligent peer writing a quick 1-on-1 note—never like a marketer or an automated AI.\n   - NEVER use AI buzzwords ('delve', 'supercharge', 'game-changer', 'synergy', 'transform', 'elevate', 'streamline') or exclamation marks (!).\n   - Reference their work naturally, pitch the offer in one punchy sentence, and end with a low-friction 4-word soft closing question (e.g., 'Open to a quick look?', 'Worth a brief chat?').\n\n### STRICT OUTPUT SCHEMA:\nYou must return ONLY a valid JSON object matching the exact structure below. Do not include markdown code fences, backticks, or introductory text.\n{\n  \"name\": \"Cleaned Full Name\",\n  \"job_title\": \"Cleaned Professional Title\",\n  \"company\": \"Cleaned Company Name\",\n  \"email\": \"predicted_or_found@domain.com\",\n  \"linkedin_url\": \"URL from input\",\n  \"snippet\": \"1-sentence summary of role and focus\",\n  \"proposal_message\": \"The custom 30-to-50 word human cold outreach pitch\"\n}",
+              "role": "system"
+            },
+            {
+              "content": "=Title: {{ $json.title }}\nLink: {{ $json.link }}\nSnippet: {{ $json.snippet }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "59b3ea65-f5fd-4ba5-ac1d-0ba4867e4b0a",
+      "name": "4. AI Free Email Extractor",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        2064,
+        832
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "rsx5Dsrq9Yz2Bqof",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI",
+          "mode": "list",
+          "cachedResultName": "n8n Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.message.content.name }}",
+            "Company": "={{ $json.message.content.company }}",
+            "Email": "={{ $json.message.content.email }}",
+            "LinkedIn Profile": "={{ $json.message.content.linkedin_url }}",
+            "Snippet": "={{ $json.message.content.snippet }}",
+            "Role": "={{ $json.message.content.job_title }}",
+            "Status": "pending",
+            "Proposal Message": "={{ $json.message.content.proposal_message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Profile",
+              "displayName": "LinkedIn Profile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Proposal Message",
+              "displayName": "Proposal Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Snippet",
+              "displayName": "Snippet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "205970ed-7327-49e2-9378-17790459a56b",
+      "name": "5. Save Leads to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2448,
+        832
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ur3LZr9QVzeRxALN",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "a473c667-51cb-4131-a0c0-32c8cc42cc0a",
+      "name": "6. Daily Dispatch Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        816,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI",
+          "mode": "list",
+          "cachedResultName": "n8n Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d4f1afc-9b41-465e-92c1-1166f09966d7",
+      "name": "7. Fetch Pending Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        1104
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ur3LZr9QVzeRxALN",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "585eb091-bb45-4a15-a2d3-f19302209b37",
+      "name": "8. Loop Over Leads",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1264,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "regex_check",
+              "leftValue": "={{ $('8. Loop Over Leads').item.json.Email }}",
+              "rightValue": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ddf6fee7-a088-4f9e-98ef-5328e749cfca",
+      "name": "8.1 Free Native Email Validator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1504,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI",
+          "mode": "list",
+          "cachedResultName": "n8n Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Invalid Email",
+            "Email": "={{ $('8. Loop Over Leads').item.json.Email }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "7b8c1a38-4149-44af-a501-3c20fcf5ef8d",
+      "name": "8.2 Update Invalid Status in Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1552,
+        1344
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ur3LZr9QVzeRxALN",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Name: {{ $('8. Loop Over Leads').item.json.Name }}\nCompany: {{ $('8. Loop Over Leads').item.json.Company }}\nSnippet: {{ $('8. Loop Over Leads').item.json.Snippet }}\nOffer: {{ $('8. Loop Over Leads').item.json['Proposal Message'] }}"
+            },
+            {
+              "content": "You are an elite B2B Sales Consultant and fellow entrepreneur writing a direct, 1-on-1 cold email to a company founder. Your goal is to get a reply by sounding like a busy, smart human peer—never like a marketer or an automated AI.\n\n### STRICT COPYWRITING RULES:\n1. GREETING: Start naturally using ONLY their first name extracted from the provided Name field (e.g., 'Hi Dave,' or 'Hey Sarah,'). NEVER use brackets or placeholders like '[Name]' or '[First Name]'.\n2. LENGTH & PACE: Write between 75 to 125 words. It should read like a thoughtful, quick note sent from an iPhone by a fellow founder—concise, conversational, and direct.\n3. BANNED VOCABULARY: NEVER use these words/phrases: 'I hope this email finds you well', 'delve', 'testament', 'game-changer', 'synergy', 'supercharge', 'transform', 'elevate', 'innovative', 'streamline', 'landscape', or ANY exclamation marks (!).\n4. TONE & SYNTAX: Use a casual, confident tone with natural sentence casing. Avoid bullet points, bold text, headers, or formal corporate jargon.\n5. STRUCTURE:\n   - The Hook: Acknowledge their specific leadership role or work at their company based on the Snippet. Do not say 'I saw your LinkedIn profile'.\n   - The Pitch: Smoothly integrate the provided Offer/Proposal Message into the email as a helpful, high-value solution for their specific operational needs.\n   - Soft CTA: End with a low-friction, 3-to-5 word closing question (e.g., 'Open to a quick look?', 'Worth a brief chat?', 'Opposed to seeing a demo?').\n\n### STRICT OUTPUT SCHEMA:\nReturn ONLY the raw body text of the email ready to send. Do not include subject lines, sign-offs with placeholder signatures (like '[Your Name]'), or introductory commentary.",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "608ba721-1e47-49b3-a70d-b4873ecb14b6",
+      "name": "9. Generate Human Cold Pitch",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        2112,
+        1088
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "rsx5Dsrq9Yz2Bqof",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('8. Loop Over Leads').item.json.Email }}",
+        "subject": "=quick question re: {{ $('8. Loop Over Leads').item.json.Company || 'your workflow' }}",
+        "emailType": "text",
+        "message": "={{ $json.message.content }}",
+        "options": {}
+      },
+      "id": "f45eb0af-8337-404c-9bfd-2b589b98435b",
+      "name": "10. Send Email via Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2528,
+        1088
+      ],
+      "webhookId": "9928626c-ae1a-4515-bda8-3db95f09742b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4paausitUiE8cy36",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI",
+          "mode": "list",
+          "cachedResultName": "n8n Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgH3RnGXiwrLOkJotYrTpYD_bMdhNyduJ58DaYwW_EI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Sent",
+            "Email": "={{ $('8. Loop Over Leads').item.json.Email }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f138905d-4810-4a14-96cc-b1729ba60f7a",
+      "name": "11. Update Sheet Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2752,
+        1088
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ur3LZr9QVzeRxALN",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "minutes"
+      },
+      "id": "1b00c5de-8af0-4a1a-a658-fb62b3bfac6a",
+      "name": "12. Human Delay (3 Mins)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2976,
+        1088
+      ],
+      "webhookId": "ff96093a-f1e0-4d1e-acc5-6adb1a6f790c"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "id": "608be62d-7b90-4e8b-a5f5-0e2f145a32f8",
+      "name": "13. Trigger: Gmail Reply",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        1600
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4paausitUiE8cy36",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a Lead Qualification & Intent Classification Engine for a high-performing B2B sales team. Your objective is to read incoming email replies and accurately filter out noise so sales reps only get alerted for real sales opportunities.\n\n### CLASSIFICATION CRITERIA:\n1. OUTPUT 'INTERESTED' IF THE EMAIL CONTAINS:\n   - Any positive interest, curiosity, or desire to see more information.\n   - Requests for pricing, case studies, or a demo.\n   - Requests to book a call, share a calendar link, or connect at a later specific time.\n   - Referring you to another colleague or department ('Please reach out to Dave regarding this').\n\n2. OUTPUT 'NOT_INTERESTED' IF THE EMAIL CONTAINS:\n   - Hard rejections ('No thanks', 'Not interested', 'We already use a competitor').\n   - Unsubscribe or privacy requests ('Remove me from your list', 'Stop emailing me').\n   - Automated Out-of-Office (OOO) replies, auto-responders, or vacation notices.\n   - Delivery failure notices, Mailer-Daemon errors, or bounced email alerts.\n   - Vague brush-offs without engagement ('Not right now, check back next year').\n\n### STRICT OUTPUT SCHEMA:\nYou must evaluate the reply and output strictly ONE EXACT WORD: either INTERESTED or NOT_INTERESTED. Do not add punctuation, quotes, markdown formatting, or any explanatory text whatsoever.",
+              "role": "system"
+            },
+            {
+              "content": "=From: {{ $json.from.value }}\nSubject: {{ $json.subject }}\nSnippet: {{ $json.snippet }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "0c5e4ced-3b17-463b-8022-6d457eee7a46",
+      "name": "14. AI Sentiment Classifier",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        1536,
+        1600
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "rsx5Dsrq9Yz2Bqof",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "check_sentiment",
+              "leftValue": "={{ $json.message.content }}",
+              "rightValue": "INTERESTED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1ce22584-3311-4ecf-a6e0-cef77db65726",
+      "name": "15. Is Lead Interested?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2192,
+        1600
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6439500761",
+        "text": "=🔥 *NEW HOT LEAD RESPONDED!*\n\n*From:* {{ $('13. Trigger: Gmail Reply').item.json.from.text || $('13. Trigger: Gmail Reply').item.json.from.value[0].name }}\n*Email:* {{ $('13. Trigger: Gmail Reply').item.json.from.value[0].address }}\n\n*Reply Content:*\n\"{{ $('13. Trigger: Gmail Reply').item.json.snippet || $('13. Trigger: Gmail Reply').item.json.text }}\"\n\n👉 *Reply back manually within 10 minutes to close!*",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "abd9918a-4a45-411b-968f-59a16208be84",
+      "name": "16. Telegram Live Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2416,
+        1600
+      ],
+      "webhookId": "7a86d307-7fbc-49da-940a-88ea62b50328",
+      "credentials": {
+        "telegramApi": {
+          "id": "C3TDeA7P0rtEic4e",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. Niche Form Trigger": {
+      "main": [
+        [
+          {
+            "node": "2. Serper Niche Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Serper Niche Search": {
+      "main": [
+        [
+          {
+            "node": "3. Extract Lead Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Extract Lead Items": {
+      "main": [
+        [
+          {
+            "node": "4. AI Free Email Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. AI Free Email Extractor": {
+      "main": [
+        [
+          {
+            "node": "5. Save Leads to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Daily Dispatch Trigger": {
+      "main": [
+        [
+          {
+            "node": "7. Fetch Pending Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Fetch Pending Leads": {
+      "main": [
+        [
+          {
+            "node": "8. Loop Over Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Loop Over Leads": {
+      "main": [
+        [],
+        [
+          {
+            "node": "8.1 Free Native Email Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8.1 Free Native Email Validator": {
+      "main": [
+        [
+          {
+            "node": "9. Generate Human Cold Pitch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8.2 Update Invalid Status in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8.2 Update Invalid Status in Sheet": {
+      "main": [
+        [
+          {
+            "node": "8. Loop Over Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Generate Human Cold Pitch": {
+      "main": [
+        [
+          {
+            "node": "10. Send Email via Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Send Email via Gmail": {
+      "main": [
+        [
+          {
+            "node": "11. Update Sheet Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Update Sheet Status": {
+      "main": [
+        [
+          {
+            "node": "12. Human Delay (3 Mins)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12. Human Delay (3 Mins)": {
+      "main": [
+        [
+          {
+            "node": "8. Loop Over Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13. Trigger: Gmail Reply": {
+      "main": [
+        [
+          {
+            "node": "14. AI Sentiment Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14. AI Sentiment Classifier": {
+      "main": [
+        [
+          {
+            "node": "15. Is Lead Interested?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15. Is Lead Interested?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "16. Telegram Live Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "784737cf-8977-42cd-a478-68c2a57cfb49",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "181f70c58d074efcabe44e5ad31d795c6b387d4a734671ca7b77c9035d3ee569"
+  },
+  "nodeGroups": [],
+  "id": "tpRMBj05knzb1NM5",
+  "tags": []
+}
