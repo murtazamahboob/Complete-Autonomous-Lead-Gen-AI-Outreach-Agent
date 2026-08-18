@@ -1,4 +1,4 @@
-#🎯 Complete 100% Autonomous Lead Gen & AI Outreach Agent
+# 🎯 Complete 100% Autonomous Lead Gen & AI Outreach Agent
 
 An end-to-end n8n automation that finds leads, enriches them with AI, sends personalized cold outreach, tracks replies, and alerts you the moment a lead shows interest — all without manual intervention.
 
